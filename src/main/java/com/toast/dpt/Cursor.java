@@ -60,14 +60,19 @@ public class Cursor {
         return index < matches.size();
     }
 
+    /** Resets the cursor back to the first match. */
+    public void reset() {
+        index = 0;
+    }
+
     /**
      * Positions the cursor at the first match whose location is >= {@code dpt}
      * (compared first by docId, then by position).
      *
-     * @return {@code true}  if {@code searchStr} exists exactly at {@code dpt};
-     *         {@code false} if not — in which case the cursor is moved to the
-     *                       next match after {@code dpt} (or becomes invalid
-     *                       if no such match exists).
+     * If the term exists exactly at {@code dpt}, the cursor is reset to the
+     * first match and {@code true} is returned.
+     * If not, the cursor is moved to the next match after {@code dpt} (or
+     * becomes invalid if none exists) and {@code false} is returned.
      */
     public boolean seek(DPT dpt) {
         // Binary search for the leftmost match >= dpt, starting from current index
@@ -91,7 +96,11 @@ public class Cursor {
         }
 
         DPT found = matches.get(index);
-        return found.docId == dpt.docId && found.position == dpt.position;
+        boolean exactMatch = found.docId == dpt.docId && found.position == dpt.position;
+        if (exactMatch) {
+            reset(); // term found — reset to first match
+        }
+        return exactMatch;
     }
 
     // -----------------------------------------------------------------------

@@ -59,18 +59,30 @@ public class CursorRunner {
             assertTrue(!c.isValid(), "done");
         });
 
-        // --- seek: exact hit ---
-        test("seek_exactHit_returnsTrue", () -> {
+        // --- seek: exact hit → cursor resets to first match ---
+        test("seek_exactHit_resetsToFirst", () -> {
+            // cat matches: (1,0), (2,2) — seek hits (2,2), cursor resets to (1,0)
             Cursor c = new Cursor("cat");
             assertTrue(c.seek(new DPT(2, 2)), "seek(2,2) should return true");
-            assertEquals(2, c.get().docId, "docId");
-            assertEquals(2, c.get().position, "pos");
+            assertEquals(1, c.get().docId, "after reset: docId should be 1");
+            assertEquals(0, c.get().position, "after reset: pos should be 0");
         });
 
-        test("seek_firstPosition_returnsTrue", () -> {
+        test("seek_firstPosition_resetsToFirst", () -> {
+            // dog matches: (1,1), (3,0) — seek hits (1,1), cursor resets to (1,1) (already first)
             Cursor c = new Cursor("dog");
             assertTrue(c.seek(new DPT(1, 1)), "seek(1,1) should return true");
-            assertEquals(1, c.get().docId, "docId");
+            assertEquals(1, c.get().docId, "after reset: first match docId");
+            assertEquals(1, c.get().position, "after reset: first match pos");
+        });
+
+        // --- reset() standalone ---
+        test("reset_returnsToFirstMatch", () -> {
+            Cursor c = new Cursor("cat");
+            c.advance(); // now at (2,2)
+            c.reset();
+            assertEquals(1, c.get().docId, "reset docId");
+            assertEquals(0, c.get().position, "reset pos");
         });
 
         // --- seek: miss → next match ---
